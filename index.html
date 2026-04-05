@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; }
-    .value { font-size: 2.5rem; line-height: 1; }
+    .value { font-size: 2.8rem; line-height: 1; }
   </style>
 </head>
 <body class="bg-zinc-950 text-zinc-100 min-h-screen p-4">
@@ -28,10 +28,10 @@
 
   <script>
     const miners = [
-      { id: 1, address: "bc1q3fkds9hfv6dufv9l8grkyg3ah77q3fjtpqywqg", label: "KS1" },
-      { id: 2, address: "bc1qejpk6styu8k0wfnhg0veggjzzxwqkc9tew4y7h", label: "ICC" },
-      { id: 3, address: "bc1qw5dv3cm0xctq4akqe5jxdr9rxz0dpzy7ylvqfd", label: "Erickson" },
-      { id: 4, address: "bc1qkd9x7598wnca9xudyzr3v3ksvddnqg8tflwv5z", label: "Hegarty" }
+      { label: "KS1",      address: "bc1q3fkds9hfv6dufv9l8grkyg3ah77q3fjtpqywqg" },
+      { label: "ICC",      address: "bc1qejpk6styu8k0wfnhg0veggjzzxwqkc9tew4y7h" },
+      { label: "Erickson", address: "bc1qw5dv3cm0xctq4akqe5jxdr9rxz0dpzy7ylvqfd" },
+      { label: "Hegarty",  address: "bc1qkd9x7598wnca9xudyzr3v3ksvddnqg8tflwv5z" }
     ];
 
     const BOT_TOKEN = "8662798406:AAHRZp2q6wVbFDGsmPVZNnCEPF3xQFch5Ng";
@@ -77,40 +77,36 @@
 
         const html = `
           <div class="bg-zinc-900 border border-zinc-700 rounded-2xl p-6">
-            <div class="flex justify-between items-start mb-4">
-              <div>
-                <div class="text-lg font-semibold">${miner.label}</div>
-                <div class="text-zinc-400 text-xs font-mono break-all">${miner.address}</div>
-              </div>
+            <div class="flex justify-between items-start mb-6">
+              <div class="text-2xl font-semibold">${miner.label}</div>
               <span class="px-4 py-1 text-xs font-bold rounded-full ${status.color === 'red' ? 'bg-red-600 text-white' : status.color === 'yellow' ? 'bg-yellow-500 text-black' : 'bg-green-600 text-white'}">
                 ${status.label}
               </span>
             </div>
 
-            <!-- Large values as requested -->
-            <div class="space-y-6">
+            <div class="space-y-8">
               <div>
-                <div class="text-zinc-400 text-sm">60 SECOND</div>
+                <div class="text-zinc-400 text-sm tracking-widest">60 SECOND</div>
                 <div class="value text-5xl font-bold font-mono text-orange-400">${formatHR(data.hashrate_60s)}</div>
               </div>
 
               <div>
-                <div class="text-zinc-400 text-sm">10 MINUTE</div>
+                <div class="text-zinc-400 text-sm tracking-widest">10 MINUTE</div>
                 <div class="value text-4xl font-bold font-mono">${formatHR(data.hashrate_600s)}</div>
               </div>
 
               <div>
-                <div class="text-zinc-400 text-sm">24 HOUR</div>
+                <div class="text-zinc-400 text-sm tracking-widest">24 HOUR</div>
                 <div class="value text-4xl font-bold font-mono">${formatHR(data.hashrate_86400s)}</div>
               </div>
             </div>
 
-            <div class="mt-6 pt-4 border-t border-zinc-700 text-xs text-zinc-500">
+            <div class="mt-8 pt-4 border-t border-zinc-700 text-xs text-zinc-500">
               3h avg: ${formatHR(data.hashrate_10800s)}
             </div>
 
             <button onclick="sendTestMessage()" 
-                    class="mt-6 w-full bg-zinc-800 hover:bg-zinc-700 py-3 rounded-xl text-sm">
+                    class="mt-8 w-full bg-zinc-800 hover:bg-zinc-700 py-3 rounded-xl text-sm font-medium">
               Send Test Telegram
             </button>
           </div>
@@ -126,10 +122,10 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ chat_id: CHAT_ID, text: msg })
       });
-      alert("✅ Test message sent!");
+      alert("✅ Test message sent to Telegram!");
     }
 
-    // Auto refresh
+    // Auto refresh every 30 seconds
     setInterval(updateDashboard, 30000);
     updateDashboard();
   </script>
