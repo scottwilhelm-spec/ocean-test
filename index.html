@@ -27,15 +27,24 @@
   </div>
 
   <script>
+    // === CONFIGURATION (prompted on first load) ===
+    let BOT_TOKEN = localStorage.getItem("botToken") || "";
+    let CHAT_ID = localStorage.getItem("chatId") || "";
+
+    if (!BOT_TOKEN || !CHAT_ID) {
+      BOT_TOKEN = prompt("Enter your Telegram Bot Token:", BOT_TOKEN);
+      CHAT_ID = prompt("Enter your Chat ID (or group chat ID):", CHAT_ID);
+      
+      if (BOT_TOKEN) localStorage.setItem("botToken", BOT_TOKEN);
+      if (CHAT_ID) localStorage.setItem("chatId", CHAT_ID);
+    }
+
     const miners = [
       { label: "KS1",      address: "bc1q3fkds9hfv6dufv9l8grkyg3ah77q3fjtpqywqg" },
       { label: "ICC",      address: "bc1qejpk6styu8k0wfnhg0veggjzzxwqkc9tew4y7h" },
       { label: "Erickson", address: "bc1qw5dv3cm0xctq4akqe5jxdr9rxz0dpzy7ylvqfd" },
       { label: "Hegarty",  address: "bc1qkd9x7598wnca9xudyzr3v3ksvddnqg8tflwv5z" }
     ];
-
-    const BOT_TOKEN = "8662798406:AAHRZp2q6wVbFDGsmPVZNnCEPF3xQFch5Ng";
-    const CHAT_ID = "1259406768";
 
     async function fetchHashrate(addr) {
       try {
@@ -116,12 +125,21 @@
     }
 
     async function sendTestMessage() {
+      if (!BOT_TOKEN || !CHAT_ID) {
+        BOT_TOKEN = prompt("Enter your Telegram Bot Token:");
+        CHAT_ID = prompt("Enter your Chat ID:");
+        if (BOT_TOKEN) localStorage.setItem("botToken", BOT_TOKEN);
+        if (CHAT_ID) localStorage.setItem("chatId", CHAT_ID);
+      }
+
       const msg = `🔍 Ocean Mining Test\n${new Date().toLocaleTimeString()}\nDashboard is live.`;
+      
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ chat_id: CHAT_ID, text: msg })
       });
+
       alert("✅ Test message sent to Telegram!");
     }
 
