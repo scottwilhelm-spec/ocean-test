@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ocean Mining Monitor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; }
+    .card { transition: all 0.3s; }
+    .critical { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen p-4">
+
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold text-orange-500 mb-6 flex items-center gap-3">
+      <i class="fa-solid fa-pickaxe"></i>
+      Ocean Mining Live Monitor
+    </h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="cards">
+      <!-- Cards populated by JavaScript -->
+    </div>
+
+    <div class="mt-8 text-center text-zinc-500 text-sm">
+      Auto-refresh every 30 seconds • 60s and 10min averages are your early warning
+    </div>
+  </div>
+
+  <script>
+    const addresses = [
+      { id: 1, address: "bc1q3fkds9hfv6dufv9l8grkyg3ah77q3fjtpqywqg", label: "Miner 1" },
+      { id: 2, address: "bc1qejpk6styu8k0wfnhg0veggjzzxwqkc9tew4y7h", label: "Miner 2" },
+      { id: 3, address: "bc1qw5dv3cm0xctq4akqe5jxdr9rxz0dpzy7ylvqfd", label: "Miner 3" },
+      { id: 4, address: "bc1qkd9x7598wnca9xudyzr3v3ksvddnqg8tflwv5z", label: "Miner 4" }
+    ];
+
+    const BOT_TOKEN = "8662798406:AAHRZp2q6wVbFDGsmPVZNnCEPF3xQFch5Ng";
+    const CHAT_ID = "1259406768";
+
+    async function fetchHashrate(addr) {
+      try {
+        const res = await fetch(`https://api.ocean.xyz/v1/user_hashrate/${addr}`);
+        const data = await res.json();
+        const r = data.result || data;
+        return {
+          hashrate_60s: Number(r.hashrate_60s) || 0,
+          hashrate_600s: Number(r.hashrate_600s) || 0,
+          hashrate_10800s: Number(r.hashrate_10800s) || 0,
+          hashrate_86400s: Number(r.hashrate_86400s) || 0,
+        };
+      } catch (e) {
+        return { hashrate_60s: 0, hashrate_600s: 0, hashrate_10800s: 0, hashrate_86400s: 0 };
+      }
+    }
+
+    function formatHR(value) {
+      if (value >= 1e15) return (value / 1e15).toFixed(2) + " PH/s";
+      if (value >= 1e12) return (value / 1e12).toFixed(2) + " TH/s";
+      return value.toFixed(0) + " GH/s";
+    }
+
+    function getStatus(current60, avg3h) {
+      if (avg3h === 0) return { color: "red", label: "CRITICAL" };
+      const ratio = current60 / avg3h;
+      if (ratio < 0.80) return { color: "red", label: "CRITICAL" };
+      if (ratio < 0.90) return { color: "yellow", label: "WARNING" };
+      return { color: "green", label: "HEALTHY" };
+    }
+
+    async function updateDashboard() {
+      const container = document.getElementById("cards");
+      container.innerHTML = "";
+
+      for (let miner of addresses) {
+        const data = await fetchHashrate(miner.address);
+        const status = getStatus(data.hashrate_60s, data.hashrate_10800s);
+
+        const cardHTML = `
+          <div class="card bg-zinc-900 border border-zinc-700 rounded-xl p-5">
+            <div class="flex justify-between items-start">
+              <div>
+                <div class="text-zinc-400 text-sm">${miner.label}</div>
+                <div class="text-zinc-300 font-mono text-xs mt-1 break-all">${miner.address}</div>
+              </div>
+              <span class="px-3 py-1 text-xs font-bold rounded-full ${status.color === 'red' ? 'bg-red-500 text-white animate-pulse' : status.color === 'yellow' ? 'bg-yellow-500 text-black' : 'bg-green-500 text-white'}">
+                ${status.label}
+              </span>
+            </div>
+
+            <div class="mt-6 text-4xl font-bold font-mono">${formatHR(data.hashrate_10800s)}</div>
+            <div class="text-zinc-500 text-sm">3h average</div>
+
+            <div class="mt-6 grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div class="text-zinc-400">60s</div>
+                <div class="font-mono">${formatHR(data.hashrate_60s)}</div>
+              </div>
+              <div>
+                <div class="text-zinc-400">10min</div>
+                <div class="font-mono">${formatHR(data.hashrate_600s)}</div>
+              </div>
+            </div>
+
+            <button onclick="sendTestMessage()" 
+                    class="mt-6 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-3 rounded-lg text-sm font-medium">
+              Send Test Telegram
+            </button>
+          </div>
+        `;
+        container.innerHTML += cardHTML;
+      }
+    }
+
+    async function sendTestMessage() {
+      const msg = "🔍 Ocean Mining Test\nDashboard is working.\nTime: " + new Date().toLocaleTimeString();
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          text: msg
+        })
+      });
+      alert("✅ Test message sent to your Telegram!");
+    }
+
+    // Auto-refresh
+    setInterval(updateDashboard, 30000);
+    updateDashboard(); // initial load
+  </script>
+</body>
+</html>
